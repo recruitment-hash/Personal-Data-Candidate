@@ -1,92 +1,1169 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candidate Personal Data Form</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<title>Candidate Personal Data Form — JFEEI-HR-P01-F02</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#e7dfc9;
+  --paper-light:#f3ede0;
+  --card:#fbf8f0;
+  --ink:#22282a;
+  --ink-soft:#5b5f57;
+  --line:#c9bf9e;
+  --stamp:#a53a2f;
+  --teal:#3c6659;
+  --teal-dark:#28453c;
+  --gold:#a9852f;
+  --ok:#3c6659;
+  --shadow: 0 1px 0 rgba(34,40,42,.06), 0 8px 20px -12px rgba(34,40,42,.35);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #f0e9d6 0%, transparent 60%),
+    var(--paper);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+.wrap{max-width:960px;margin:0 auto;padding:28px 20px 90px;}
+
+/* ---------- Header ---------- */
+.masthead{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  border-bottom:3px double var(--ink);
+  padding-bottom:14px;margin-bottom:6px;gap:16px;flex-wrap:wrap;
+}
+.masthead .id{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:.06em;color:var(--ink-soft);
+}
+.masthead h1{
+  font-family:'Zilla Slab',serif;font-weight:700;
+  font-size:clamp(22px,4vw,32px);margin:2px 0 0;letter-spacing:.01em;
+}
+.masthead .rev{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+  text-align:right;color:var(--ink-soft);line-height:1.6;
+}
+.status-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+  padding:4px 10px;border-radius:20px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink-soft);
+}
+.status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);}
+
+/* ---------- Header box (mimics original border+logo) ---------- */
+.header-box{
+  border:2px solid var(--ink);background:var(--card);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;gap:16px;margin-bottom:0;
+}
+.header-box h1{
+  font-family:'Zilla Slab',serif;font-weight:700;
+  font-size:clamp(18px,3.4vw,26px);margin:0;letter-spacing:.01em;
+  text-transform:uppercase;
+}
+.header-box img.logo{height:34px;display:block;}
+
+/* ---------- Photo upload box ---------- */
+.photo-box{
+  width:150px;height:180px;border:1px solid var(--ink);
+  background:#fffdf8;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;cursor:pointer;position:relative;overflow:hidden;
+  text-align:center;color:var(--ink-soft);font-size:12px;
+  justify-self:end;
+}
+.photo-box img{width:100%;height:100%;object-fit:cover;}
+.photo-box .ph-label{font-family:'IBM Plex Mono',monospace;}
+.photo-box .ph-remove{
+  position:absolute;top:4px;right:4px;background:rgba(34,40,42,.75);
+  color:#fff;border:none;border-radius:3px;width:20px;height:20px;
+  font-size:12px;cursor:pointer;display:none;
+}
+.photo-box.has-img .ph-remove{display:block;}
+.photo-row{display:grid;grid-template-columns:1fr 150px;gap:20px;align-items:start;}
+
+/* ---------- Generic file upload chip ---------- */
+.file-upload{
+  border:1px dashed var(--line);border-radius:5px;
+  padding:10px 12px;background:#fffdf8;
+}
+.file-upload .fu-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.file-upload label.fu-btn{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal-dark);
+  border:1px solid var(--teal-dark);border-radius:4px;padding:6px 10px;
+  cursor:pointer;background:none;
+}
+.file-upload label.fu-btn:hover{background:rgba(60,102,89,.08);}
+.file-upload .fu-name{font-size:12.5px;color:var(--ink-soft);flex:1;min-width:120px;overflow-wrap:anywhere;}
+.file-upload .fu-thumb{max-height:60px;max-width:90px;border:1px solid var(--line);border-radius:3px;display:none;}
+.file-upload .fu-thumb.show{display:block;}
+.file-upload .fu-rm{background:none;border:none;color:var(--stamp);cursor:pointer;font-size:13px;}
+.file-upload input[type=file]{display:none;}
+
+/* ---------- Signature pad ---------- */
+.sigpad-wrap{border:1px solid var(--ink);border-radius:4px;background:#fffdf8;position:relative;}
+canvas.sigpad{width:100%;height:150px;display:block;touch-action:none;cursor:crosshair;}
+.sigpad-tools{display:flex;justify-content:flex-end;gap:8px;margin-top:6px;}
+.sigpad-tools button{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);
+  border:1px solid var(--line);background:none;border-radius:4px;padding:5px 10px;cursor:pointer;
+}
+.sigpad-tools button:hover{background:rgba(0,0,0,.05);}
+.sigpad-placeholder{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#b7ae95;font-size:12px;font-family:'IBM Plex Mono',monospace;pointer-events:none;
+}
+
+/* ---------- Tabs (folder index) ---------- */
+.tabbar{
+  display:flex;overflow-x:auto;gap:2px;margin:22px 0 0;
+  scrollbar-width:none;
+}
+.tabbar::-webkit-scrollbar{display:none;}
+.tab{
+  flex:0 0 auto;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:.04em;
+  padding:9px 14px 8px;
+  background:var(--paper-light);
+  border:1px solid var(--line);border-bottom:none;
+  border-radius:6px 6px 0 0;
+  color:var(--ink-soft);cursor:pointer;
+  position:relative;top:1px;
+  white-space:nowrap;
+}
+.tab b{color:var(--stamp);font-weight:600;margin-right:6px;}
+.tab.active{
+  background:var(--card);color:var(--ink);
+  border-color:var(--ink);
+  font-weight:600;
+}
+
+/* ---------- Sections / cards ---------- */
+.card{
+  background:var(--card);
+  border:1px solid var(--ink);
+  border-top:none;
+  box-shadow:var(--shadow);
+  padding:26px 26px 30px;
+  margin-bottom:26px;
+}
+.section-head{
+  display:flex;align-items:baseline;gap:10px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:10px;margin-bottom:20px;
+}
+.section-head .num{
+  font-family:'IBM Plex Mono',monospace;color:var(--stamp);
+  font-size:13px;font-weight:600;border:1px solid var(--stamp);
+  padding:1px 7px;border-radius:3px;
+}
+.section-head h2{
+  font-family:'Zilla Slab',serif;font-size:19px;margin:0;
+  font-weight:600;letter-spacing:.01em;
+}
+.section-head .hint{
+  font-size:11px;color:var(--ink-soft);margin-left:auto;font-style:italic;
+}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px;}
+.grid.g3{grid-template-columns:1fr 1fr 1fr;}
+.full{grid-column:1 / -1;}
+
+.field label{
+  display:block;font-size:11.5px;font-weight:600;
+  color:var(--ink-soft);margin-bottom:5px;
+  letter-spacing:.02em;text-transform:uppercase;
+}
+.field input, .field select, .field textarea{
+  width:100%;font-family:'Inter',sans-serif;font-size:14.5px;
+  padding:9px 10px;border:1px solid var(--line);border-radius:4px;
+  background:#fffdf8;color:var(--ink);
+}
+.field textarea{resize:vertical;min-height:64px;line-height:1.5;}
+.field input:focus, .field select:focus, .field textarea:focus{
+  outline:none;border-color:var(--teal);
+  box-shadow:0 0 0 3px rgba(60,102,89,.15);
+}
+
+/* ---------- Tables (education / family / skills) ---------- */
+.tbl-wrap{overflow-x:auto;}
+table.dyn{width:100%;border-collapse:collapse;min-width:640px;}
+table.dyn th{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);
+  text-align:left;padding:0 8px 8px;border-bottom:1px solid var(--ink);
+}
+table.dyn td{padding:5px 8px 5px 0;vertical-align:top;}
+table.dyn input, table.dyn select{
+  width:100%;font-size:13.5px;padding:7px 8px;
+  border:1px solid var(--line);border-radius:4px;background:#fffdf8;
+}
+table.dyn tr td:first-child{font-size:13px;font-weight:600;padding-top:9px;white-space:nowrap;}
+table.dyn tr + tr td{border-top:1px dashed var(--line);}
+.row-label-input{font-weight:600;}
+
+/* ---------- Experience blocks ---------- */
+.exp-block{
+  border:1px dashed var(--line);border-radius:6px;
+  padding:18px 18px 6px;margin-bottom:18px;position:relative;
+}
+.exp-block .exp-tag{
+  position:absolute;top:-11px;left:14px;background:var(--card);
+  padding:0 8px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+  color:var(--teal-dark);font-weight:600;
+}
+
+/* ---------- Reference columns ---------- */
+.ref-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.ref-col{border:1px solid var(--line);border-radius:6px;padding:14px;background:var(--paper-light);}
+.ref-col h3{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;margin:0 0 12px;
+  color:var(--teal-dark);text-transform:uppercase;letter-spacing:.03em;
+  border-bottom:1px solid var(--line);padding-bottom:8px;
+}
+.ref-col .field{margin-bottom:10px;}
+
+/* ---------- Radio-style choice ---------- */
+.choice-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:2px;}
+.choice-row label{
+  display:flex;align-items:center;gap:6px;font-size:13.5px;
+  font-weight:400;text-transform:none;color:var(--ink);
+}
+.choice-row input[type=radio]{width:auto;accent-color:var(--teal);}
+
+/* ---------- Declaration ---------- */
+.decl-text{font-size:13.5px;line-height:1.7;color:var(--ink-soft);
+  background:var(--paper-light);border-left:3px solid var(--stamp);
+  padding:14px 16px;margin-bottom:20px;}
+.sign-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.sign-box{text-align:center;padding-top:6px;}
+.sign-box .line{border-top:1px solid var(--ink);margin-top:60px;padding-top:6px;font-size:12px;color:var(--ink-soft);}
+
+/* ---------- Toolbar (fixed) ---------- */
+.toolbar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--ink);color:#f3ede0;
+  display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 16px;box-shadow:0 -8px 20px rgba(0,0,0,.15);
+  z-index:50;
+}
+.toolbar button{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;
+  letter-spacing:.03em;border:1px solid rgba(255,255,255,.25);
+  background:transparent;color:#f3ede0;padding:9px 16px;border-radius:5px;
+  cursor:pointer;transition:background .15s;
+}
+.toolbar button:hover{background:rgba(255,255,255,.1);}
+.toolbar button.primary{background:var(--teal);border-color:var(--teal);}
+.toolbar button.primary:hover{background:var(--teal-dark);}
+.toolbar button.primary:disabled{opacity:.6;cursor:wait;}
+.toolbar button.danger{border-color:rgba(165,58,47,.5);color:#e7bdb6;}
+.toolbar button.danger:hover{background:rgba(165,58,47,.25);}
+.toolbar .save-note{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a9a292;align-self:center;margin-right:6px;}
+.toolbar .submit-status{font-family:'IBM Plex Mono',monospace;font-size:11px;align-self:center;}
+.toolbar .submit-status.ok{color:#8fd0a8;}
+.toolbar .submit-status.err{color:#e7938a;}
+
+.add-btn{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal-dark);
+  background:none;border:1px dashed var(--teal-dark);border-radius:4px;
+  padding:5px 10px;cursor:pointer;margin-top:4px;
+}
+.add-btn:hover{background:rgba(60,102,89,.08);}
+.rm-btn{
+  background:none;border:none;color:var(--stamp);cursor:pointer;font-size:15px;
+  padding:6px 4px;line-height:1;
+}
+
+@media (max-width:720px){
+  .grid, .grid.g3, .ref-grid, .sign-grid{grid-template-columns:1fr;}
+  .card{padding:20px 16px 24px;}
+}
+
+@media print{
+  body{background:#fff;}
+  .toolbar, .tabbar{display:none !important;}
+  .card{box-shadow:none;border:1px solid #999;break-inside:avoid;margin-bottom:14px;}
+  .wrap{padding-bottom:20px;max-width:100%;}
+}
+
+/* ---------- PDF clone (matches Excel print appearance) ---------- */
+.pdfclone{
+  position:fixed;left:-99999px;top:0;
+  width:794px;background:#ffffff;color:#000;
+  font-family:Calibri,Arial,sans-serif;
+  padding:34px 38px;
+}
+.pdfclone.show{ left:0; z-index:-1; opacity:0; pointer-events:none; }
+.pdfclone .pdf-title-row{
+  border:2px solid #000;display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;margin-bottom:12px;
+}
+.pdfclone .pdf-title-row h1{font-family:Arial,sans-serif;font-size:17px;font-weight:700;margin:0;text-transform:uppercase;}
+.pdfclone .pdf-title-row img{height:28px;}
+.pdfclone .pdf-topgrid{display:flex;justify-content:space-between;gap:16px;margin-bottom:10px;}
+.pdfclone .pdf-photo-box{
+  width:104px;height:132px;border:1px solid #000;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#777;overflow:hidden;
+}
+.pdfclone .pdf-photo-box img{width:100%;height:100%;object-fit:cover;}
+.pdfclone .pdf-row{display:flex;font-size:10.5px;margin-bottom:4px;align-items:flex-end;}
+.pdfclone .pdf-row.half{width:49%;}
+.pdfclone .pdf-row-pair{display:flex;justify-content:space-between;gap:12px;}
+.pdfclone .pdf-row .lbl{width:132px;font-weight:700;flex-shrink:0;}
+.pdfclone .pdf-row.half .lbl{width:110px;}
+.pdfclone .pdf-row .colon{width:10px;flex-shrink:0;}
+.pdfclone .pdf-row .val{flex:1;border-bottom:1px solid #000;min-height:13px;padding-bottom:1px;word-break:break-word;}
+.pdfclone .pdf-section-bar{
+  background:#C0C0C0;border:1px solid #000;font-weight:700;text-align:center;
+  padding:5px;font-size:12.5px;margin:14px 0 9px;text-transform:uppercase;font-family:Calibri,Arial,sans-serif;
+}
+.pdfclone table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;}
+.pdfclone table th, .pdfclone table td{border:1px solid #000;padding:4px 6px;text-align:left;vertical-align:top;}
+.pdfclone table th{background:#EDEDED;font-weight:700;text-align:center;}
+.pdfclone .pdf-exp-title{font-weight:700;font-size:11.5px;margin:12px 0 6px;text-decoration:underline;}
+.pdfclone .pdf-jobdesc{white-space:pre-wrap;font-size:10.5px;border:1px solid #000;padding:5px 6px;min-height:30px;margin-bottom:6px;}
+.pdfclone .pdf-decl{font-size:9.5px;line-height:1.5;margin:14px 0;}
+.pdfclone .pdf-sign-row{display:flex;justify-content:space-between;margin-top:16px;font-size:10.5px;}
+.pdfclone .pdf-sign-box{width:46%;text-align:center;}
+.pdfclone .pdf-sign-box img{height:55px;display:block;margin:0 auto 4px;}
+.pdfclone .pdf-sign-box .line{border-top:1px solid #000;margin-top:40px;padding-top:4px;}
+.pdfclone .pdf-note{font-size:9px;color:#555;font-style:italic;}
+</style>
 </head>
-<body class="bg-gray-100 py-10 px-4">
-    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">CANDIDATE PERSONAL DATA FORM</h2>
-        
-        <form id="candidateForm" class="space-y-6">
-            <!-- Posisi -->
-            <div class="bg-blue-50 p-4 rounded-md border border-blue-100">
-                <label class="block font-semibold text-gray-700">Position Applied:</label>
-                <input type="text" name="position_applied" required class="w-full mt-1 border rounded p-2">
-            </div>
+<body>
+<div class="wrap">
 
-            <!-- I. PERSONAL -->
-            <div class="border-b pb-4">
-                <h3 class="font-bold text-lg mb-3">I. PERSONAL INFORMATIONS</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" name="full_name" placeholder="Full Name" required class="border rounded p-2">
-                    <input type="text" name="dob" placeholder="Date of Birth" class="border rounded p-2">
-                    <textarea name="current_address" placeholder="Current Address" class="border rounded p-2 col-span-2"></textarea>
-                    <input type="email" name="email" placeholder="Email" required class="border rounded p-2">
-                    <input type="text" name="phone" placeholder="Phone Number" required class="border rounded p-2">
-                </div>
-            </div>
+  <div class="id" style="margin-bottom:6px;">JFEEI-HR-P01-F02 &nbsp;·&nbsp; REV. 01</div>
+  <div class="header-box">
+    <h1>Candidate Personal Data Form</h1>
+    <img class="logo" src="data:image/png;base64,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" alt="PT. JFE Engineering Indonesia">
+  </div>
 
-            <!-- II. EDUCATION -->
-            <div class="border-b pb-4">
-                <h3 class="font-bold text-lg mb-3">II. EDUCATION BACKGROUND</h3>
-                <div class="space-y-2">
-                    <input type="text" name="edu_sma" placeholder="SMA/SMK (Institution, Major, Year)" class="w-full border rounded p-2">
-                    <input type="text" name="edu_dip" placeholder="Diploma (Institution, Major, Year)" class="w-full border rounded p-2">
-                    <input type="text" name="edu_bach" placeholder="Bachelor (Institution, Major, Year)" class="w-full border rounded p-2">
-                </div>
-            </div>
+  <div class="tabbar" id="tabbar"></div>
 
-            <!-- III. FAMILY -->
-            <div class="border-b pb-4">
-                <h3 class="font-bold text-lg mb-3">III. FAMILY BACKGROUND</h3>
-                <input type="text" name="fam_wife" placeholder="Wife/Husband Name & Job" class="w-full border rounded p-2 mb-2">
-                <input type="text" name="fam_child" placeholder="Children (Name, Age, Job)" class="w-full border rounded p-2">
-            </div>
+  <form id="candidateForm" autocomplete="off">
 
-            <!-- IV. WORKING EXPERIENCE -->
-            <div class="border-b pb-4">
-                <h3 class="font-bold text-lg mb-3">IV. WORKING EXPERIENCE (Start from Last)</h3>
-                <div class="space-y-3">
-                    <textarea name="exp1" placeholder="Experience 1 (Company, Pos, Period, Salary, Reason for Leaving)" class="w-full border rounded p-2 h-20"></textarea>
-                    <textarea name="exp2" placeholder="Experience 2 (Company, Pos, Period, Salary, Reason for Leaving)" class="w-full border rounded p-2 h-20"></textarea>
-                    <textarea name="exp3" placeholder="Experience 3 (Company, Pos, Period, Salary, Reason for Leaving)" class="w-full border rounded p-2 h-20"></textarea>
-                </div>
-            </div>
+  <!-- 0. POSITION -->
+  <section class="card" data-section="0">
+    <div class="section-head"><span class="num">00</span><h2>Position &amp; Summary</h2></div>
+    <div class="photo-row">
+      <div class="field full"><label>Position Applied</label>
+        <input type="text" data-k="position_applied" placeholder="Position applied for"></div>
+      <div class="photo-box" id="photoBox">
+        <input type="file" id="photoInput" accept="image/*">
+        <img id="photoPreview" style="display:none;">
+        <div class="ph-label" id="photoLabel">+ Upload<br>Photo</div>
+        <button type="button" class="ph-remove" id="photoRemove" title="Remove photo">✕</button>
+      </div>
+    </div>
+  </section>
 
-            <!-- V. SKILLS -->
-            <div class="border-b pb-4">
-                <h3 class="font-bold text-lg mb-3">V. SKILLS</h3>
-                <input type="text" name="lang_skills" placeholder="Language (Scale 1-10)" class="w-full border rounded p-2 mb-2">
-                <input type="text" name="comp_skills" placeholder="Computer Skills (Scale 1-10)" class="w-full border rounded p-2">
-            </div>
+  <!-- 1. PERSONAL -->
+  <section class="card" data-section="1">
+    <div class="section-head"><span class="num">01</span><h2>Personal Information</h2></div>
+    <div class="grid">
+      <div class="field full"><label>Full Name</label><input type="text" data-k="full_name"></div>
 
-            <!-- VI. REFERENCES -->
-            <div class="pb-4">
-                <h3 class="font-bold text-lg mb-3">VI. REFERENCES</h3>
-                <input type="text" name="ref1" placeholder="Reference 1 (HR Name, Position, Company, Phone)" class="w-full border rounded p-2 mb-2">
-                <input type="text" name="ref2" placeholder="Reference 2 (Name, Position, Company, Phone)" class="w-full border rounded p-2">
-            </div>
+      <div class="field"><label>Date of Birth</label><input type="date" data-k="dob"></div>
+      <div class="field"><label>Age</label><input type="text" data-k="age" placeholder="Tahun"></div>
 
-            <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700">KIRIM FORMULIR</button>
-        </form>
+      <div class="field full"><label>Current Address</label><textarea data-k="curr_address"></textarea></div>
+      <div class="field full"><label>City &amp; Province (Current)</label><input type="text" data-k="curr_city"></div>
 
-        <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 text-green-700 rounded text-center">Data Berhasil Dikirim!</div>
+      <div class="field full"><label>Home Address (KTP)</label><textarea data-k="home_address"></textarea></div>
+      <div class="field full"><label>City &amp; Province (Home)</label><input type="text" data-k="home_city"></div>
+
+      <div class="field"><label>Email</label><input type="email" data-k="email"></div>
+      <div class="field"><label>Phone Number</label><input type="tel" data-k="phone"></div>
+
+      <div class="field full">
+        <label>Marital Status</label>
+        <div class="choice-row">
+          <label><input type="radio" name="marital" value="Single"> Single</label>
+          <label><input type="radio" name="marital" value="Married"> Married</label>
+          <label><input type="radio" name="marital" value="Widow"> Widow</label>
+          <label><input type="radio" name="marital" value="Widower"> Widower</label>
+        </div>
+      </div>
+      <div class="field"><label>Religion</label><input type="text" data-k="religion"></div>
+
+      <div class="field full">
+        <label>Employment Status</label>
+        <div class="choice-row">
+          <label><input type="radio" name="empstatus" value="Contract"> Contract</label>
+          <label><input type="radio" name="empstatus" value="Permanent"> Permanent</label>
+          <label><input type="radio" name="empstatus" value="Freelance"> Freelance</label>
+          <label><input type="radio" name="empstatus" value="Standby"> Standby</label>
+        </div>
+      </div>
+      <div class="field"><label>Nationality</label><input type="text" data-k="nationality"></div>
+
+      <div class="field"><label>Expected Salary (THP)</label><input type="text" data-k="expected_salary" placeholder="Rp"></div>
+      <div class="field"><label>Join Date Availability</label><input type="date" data-k="join_date"></div>
+    </div>
+  </section>
+
+  <!-- 2. EDUCATION -->
+  <section class="card" data-section="2">
+    <div class="section-head"><span class="num">02</span><h2>Education Background</h2></div>
+    <div class="tbl-wrap">
+      <table class="dyn">
+        <thead><tr>
+          <th style="width:16%">Level</th><th style="width:26%">Institution Name</th>
+          <th style="width:20%">Major</th><th style="width:14%">Entrance Year</th><th style="width:14%">Graduate Year</th>
+        </tr></thead>
+        <tbody id="eduBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3. FAMILY -->
+  <section class="card" data-section="3">
+    <div class="section-head"><span class="num">03</span><h2>Family Background</h2><span class="hint">Spouse &amp; Children</span></div>
+    <div class="tbl-wrap">
+      <table class="dyn">
+        <thead><tr>
+          <th style="width:18%">Relationship</th><th style="width:26%">Name</th>
+          <th style="width:16%">Gender</th><th style="width:12%">Age</th><th style="width:20%">Job</th>
+        </tr></thead>
+        <tbody id="famBody"></tbody>
+      </table>
+    </div>
+    <button type="button" class="add-btn" id="addFam">+ Add family row</button>
+  </section>
+
+  <!-- 4. WORK EXPERIENCE -->
+  <section class="card" data-section="4">
+    <div class="section-head"><span class="num">04</span><h2>Working Experience</h2><span class="hint">Start from last employment</span></div>
+    <div id="expWrap"></div>
+    <button type="button" class="add-btn" id="addExp">+ Add work experience</button>
+  </section>
+
+  <!-- 5. SKILLS -->
+  <section class="card" data-section="5">
+    <div class="section-head"><span class="num">05</span><h2>Skills</h2><span class="hint">Scale 1–10, with 10 as most fluent</span></div>
+
+    <div class="tbl-wrap" style="margin-bottom:22px;">
+      <table class="dyn">
+        <thead><tr>
+          <th style="width:22%">Language</th><th style="width:16%">Writing</th><th style="width:16%">Reading</th>
+          <th style="width:16%">Speaking</th><th style="width:30%">Certification</th>
+        </tr></thead>
+        <tbody id="langBody"></tbody>
+      </table>
     </div>
 
-    <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbx-uaREHEIZxycnuctP_8LmQgzEx2mm47xarKc_cm3U_uLKo1i7YLwdgk3ME7FLXPfr4w/exec';
-        const form = document.getElementById('candidateForm');
-        form.addEventListener('submit', e => {
-            e.preventDefault();
-            fetch(scriptURL, { method: 'POST', body: new FormData(form)})
-                .then(() => {
-                    form.reset();
-                    document.getElementById('successMessage').classList.remove('hidden');
-                });
-        });
-    </script>
+    <div class="tbl-wrap">
+      <table class="dyn">
+        <thead><tr>
+          <th style="width:34%">Computer / Software Skill</th><th style="width:22%">Scale (1–10)</th><th style="width:44%">Certification</th>
+        </tr></thead>
+        <tbody id="softBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6. REFERENCES -->
+  <section class="card" data-section="6">
+    <div class="section-head"><span class="num">06</span><h2>References</h2><span class="hint">Min. 1 referensi HR dari perusahaan sebelumnya</span></div>
+    <div class="ref-grid" id="refGrid"></div>
+    <div class="field full" style="margin-top:18px;">
+      <label>Bersedia menjalani reference / background check?</label>
+      <div class="choice-row">
+        <label><input type="radio" name="bgcheck" value="YES"> Yes</label>
+        <label><input type="radio" name="bgcheck" value="NO"> No</label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. DECLARATION -->
+  <section class="card" data-section="7">
+    <div class="section-head"><span class="num">07</span><h2>Declaration</h2></div>
+    <p class="decl-text">I hereby certify that the foregoing answers are correct to the best of my knowledge and belief. I understand that misrepresentation will be considered as a just cause for rejection of this application or dismissal from employment.</p>
+    <div class="grid">
+      <div class="field"><label>Place &amp; Date</label><input type="text" data-k="decl_place_date" placeholder="Jakarta, __________ 20__"></div>
+      <div class="field"><label>Full Name</label><input type="text" data-k="decl_name" placeholder="Full Name"></div>
+      <div class="field full">
+        <label>Tanda Tangan Digital</label>
+        <div class="sigpad-wrap">
+          <canvas class="sigpad" id="sigpad"></canvas>
+          <div class="sigpad-placeholder" id="sigPlaceholder">Sign here (mouse / finger)</div>
+        </div>
+        <div class="sigpad-tools">
+          <button type="button" id="sigClear">Clear</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </form>
+</div>
+
+<div class="pdfclone" id="pdfClone"></div>
+
+<div class="toolbar">
+  <span class="save-note" id="saveNote"></span>
+  <span class="submit-status" id="submitStatus"></span>
+  <input type="email" id="hrEmailInput" placeholder="HR email address" style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 10px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#f3ede0;width:170px;">
+  <button type="button" id="btnReset" class="danger">Reset Form</button>
+  <button type="button" id="btnPrint">Print</button>
+  <button type="button" id="btnDownloadPdf">Download PDF</button>
+  <button type="button" id="btnEmailSubmit">Submit via Email</button>
+  <button type="button" id="btnSheetSubmit" class="primary">Submit Application</button>
+</div>
+
+<script>
+(function(){
+  const STORE_KEY = 'jfeei_candidate_form_v1';
+  const form = document.getElementById('candidateForm');
+
+  // ── ADMIN CONFIG ─────────────────────────────────────────────
+  // After deploying the Google Apps Script (see setup instructions),
+  // paste the Web App URL below between the quotes. Leave empty ('')
+  // to disable the "Submit Application" (Google Sheet) button.
+  const GOOGLE_SCRIPT_URL = '';
+  // ─────────────────────────────────────────────────────────────
+
+  const state = {
+    fields: {},
+    marital: '', empstatus: '', bgcheck: '',
+    education: [
+      {level:'SMA/SMK', inst:'', major:'', entrance:'', grad:''},
+      {level:'Diploma I/II/III', inst:'', major:'', entrance:'', grad:''},
+      {level:"Bachelor's Degree", inst:'', major:'', entrance:'', grad:''},
+      {level:"Master's Degree", inst:'', major:'', entrance:'', grad:''},
+    ],
+    family: [
+      {rel:'Wife/Husband', name:'', gender:'', age:'', job:''},
+      {rel:'1st Child', name:'', gender:'', age:'', job:''},
+      {rel:'2nd Child', name:'', gender:'', age:'', job:''},
+      {rel:'3rd Child', name:'', gender:'', age:'', job:''},
+    ],
+    experience: [ blankExp(), blankExp(), blankExp() ],
+    languages: [ blankLang(), blankLang(), blankLang() ],
+    software: [ blankSoft(), blankSoft(), blankSoft() ],
+    references: [ blankRef('REFERENCE 1 (HR)'), blankRef('REFERENCE 2'), blankRef('REFERENCE 3') ],
+    photo: null,     // {data, filename}
+    signature: null, // dataURL png
+  };
+
+  function blankExp(){return {company:'',period:'',position:'',business:'',jobdesc:'',salary:'',transport:'',meal:'',overtime:'',orgstruct:null,otherallow:'',reason:''};}
+  function blankLang(){return {lang:'',writing:'',reading:'',speaking:'',cert:''};}
+  function blankSoft(){return {name:'',scale:'',cert:''};}
+  function blankRef(label){return {label:label,name:'',position:'',company:'',relationship:'',phone:''};}
+
+  /* ---------- Render dynamic sections ---------- */
+  function renderEdu(){
+    const body = document.getElementById('eduBody');
+    body.innerHTML = state.education.map((r,i)=>`
+      <tr>
+        <td>${r.level}</td>
+        <td><input data-arr="education" data-i="${i}" data-f="inst" value="${esc(r.inst)}"></td>
+        <td><input data-arr="education" data-i="${i}" data-f="major" value="${esc(r.major)}"></td>
+        <td><input data-arr="education" data-i="${i}" data-f="entrance" value="${esc(r.entrance)}" placeholder="Tahun"></td>
+        <td><input data-arr="education" data-i="${i}" data-f="grad" value="${esc(r.grad)}" placeholder="Tahun"></td>
+      </tr>`).join('');
+  }
+
+  function renderFam(){
+    const body = document.getElementById('famBody');
+    body.innerHTML = state.family.map((r,i)=>`
+      <tr>
+        <td><input class="row-label-input" data-arr="family" data-i="${i}" data-f="rel" value="${esc(r.rel)}"></td>
+        <td><input data-arr="family" data-i="${i}" data-f="name" value="${esc(r.name)}"></td>
+        <td><input data-arr="family" data-i="${i}" data-f="gender" value="${esc(r.gender)}"></td>
+        <td><input data-arr="family" data-i="${i}" data-f="age" value="${esc(r.age)}"></td>
+        <td><input data-arr="family" data-i="${i}" data-f="job" value="${esc(r.job)}">
+        ${state.family.length>2?`<button type="button" class="rm-btn" data-rm="family" data-i="${i}" title="Remove row">✕</button>`:''}
+        </td>
+      </tr>`).join('');
+  }
+
+  function renderExp(){
+    const wrap = document.getElementById('expWrap');
+    wrap.innerHTML = state.experience.map((r,i)=>`
+      <div class="exp-block">
+        <span class="exp-tag">Experience ${i+1}${i===0?' (Latest)':''}</span>
+        ${state.experience.length>1?`<button type="button" class="rm-btn" data-rm="experience" data-i="${i}" style="position:absolute;top:8px;right:10px;">✕</button>`:''}
+        <div class="grid" style="margin-top:6px;">
+          <div class="field"><label>Company Name</label><input data-arr="experience" data-i="${i}" data-f="company" value="${esc(r.company)}"></div>
+          <div class="field"><label>Working Period</label><input data-arr="experience" data-i="${i}" data-f="period" placeholder="mm/yyyy – mm/yyyy" value="${esc(r.period)}"></div>
+
+          <div class="field"><label>Position</label><input data-arr="experience" data-i="${i}" data-f="position" value="${esc(r.position)}"></div>
+          <div class="field"><label>Type of Business</label><input data-arr="experience" data-i="${i}" data-f="business" value="${esc(r.business)}"></div>
+
+          <div class="field full"><label>Job Description</label><textarea data-arr="experience" data-i="${i}" data-f="jobdesc" placeholder="- ...">${esc(r.jobdesc)}</textarea></div>
+
+          <div class="field"><label>Basic Salary (Gross/Nett)</label><input data-arr="experience" data-i="${i}" data-f="salary" value="${esc(r.salary)}"></div>
+          <div class="field"><label>Transportation Allowance</label><input data-arr="experience" data-i="${i}" data-f="transport" value="${esc(r.transport)}"></div>
+
+          <div class="field"><label>Meal Allowance</label><input data-arr="experience" data-i="${i}" data-f="meal" value="${esc(r.meal)}"></div>
+          <div class="field"><label>Overtime Allowance</label><input data-arr="experience" data-i="${i}" data-f="overtime" value="${esc(r.overtime)}"></div>
+
+          <div class="field full">
+            <label>Organization Structure</label>
+            <div class="file-upload" data-org-upload="${i}">
+              <div class="fu-row">
+                <label class="fu-btn">Upload file (image/PDF)<input type="file" accept="image/*,.pdf" data-org-input="${i}"></label>
+                <span class="fu-name">${r.orgstruct && r.orgstruct.filename ? esc(r.orgstruct.filename) : 'No file uploaded'}</span>
+                <img class="fu-thumb ${r.orgstruct && r.orgstruct.thumb ? 'show' : ''}" src="${r.orgstruct && r.orgstruct.thumb ? r.orgstruct.thumb : ''}">
+                ${r.orgstruct && r.orgstruct.filename ? `<button type="button" class="fu-rm" data-org-rm="${i}">Remove</button>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>Other Allowances / Benefits</label><input data-arr="experience" data-i="${i}" data-f="otherallow" value="${esc(r.otherallow)}"></div>
+
+          <div class="field full"><label>Reason for Leaving</label><input data-arr="experience" data-i="${i}" data-f="reason" value="${esc(r.reason)}"></div>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderLang(){
+    const body = document.getElementById('langBody');
+    body.innerHTML = state.languages.map((r,i)=>`
+      <tr>
+        <td><input data-arr="languages" data-i="${i}" data-f="lang" value="${esc(r.lang)}" placeholder="e.g. English"></td>
+        <td><input data-arr="languages" data-i="${i}" data-f="writing" value="${esc(r.writing)}"></td>
+        <td><input data-arr="languages" data-i="${i}" data-f="reading" value="${esc(r.reading)}"></td>
+        <td><input data-arr="languages" data-i="${i}" data-f="speaking" value="${esc(r.speaking)}"></td>
+        <td><input data-arr="languages" data-i="${i}" data-f="cert" value="${esc(r.cert)}" placeholder="NO / YES from …"></td>
+      </tr>`).join('');
+  }
+
+  function renderSoft(){
+    const body = document.getElementById('softBody');
+    body.innerHTML = state.software.map((r,i)=>`
+      <tr>
+        <td><input data-arr="software" data-i="${i}" data-f="name" value="${esc(r.name)}"></td>
+        <td><input data-arr="software" data-i="${i}" data-f="scale" value="${esc(r.scale)}"></td>
+        <td><input data-arr="software" data-i="${i}" data-f="cert" value="${esc(r.cert)}" placeholder="NO / YES from …"></td>
+      </tr>`).join('');
+  }
+
+  function renderRef(){
+    const grid = document.getElementById('refGrid');
+    grid.innerHTML = state.references.map((r,i)=>`
+      <div class="ref-col">
+        <h3>${esc(r.label)}</h3>
+        <div class="field"><label>Name</label><input data-arr="references" data-i="${i}" data-f="name" value="${esc(r.name)}"></div>
+        <div class="field"><label>Position</label><input data-arr="references" data-i="${i}" data-f="position" value="${esc(r.position)}"></div>
+        <div class="field"><label>Company</label><input data-arr="references" data-i="${i}" data-f="company" value="${esc(r.company)}"></div>
+        <div class="field"><label>Relationship</label><input data-arr="references" data-i="${i}" data-f="relationship" value="${esc(r.relationship)}"></div>
+        <div class="field"><label>Phone Number</label><input data-arr="references" data-i="${i}" data-f="phone" value="${esc(r.phone)}"></div>
+      </div>`).join('');
+  }
+
+  function esc(v){ return (v||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+  function renderAll(){
+    renderEdu(); renderFam(); renderExp(); renderLang(); renderSoft(); renderRef();
+    hydrateSimpleFields();
+    hydrateRadios();
+    renderPhoto();
+  }
+
+  /* ---------- Photo upload ---------- */
+  function renderPhoto(){
+    const box = document.getElementById('photoBox');
+    const img = document.getElementById('photoPreview');
+    const label = document.getElementById('photoLabel');
+    if(state.photo && state.photo.data){
+      img.src = state.photo.data; img.style.display = 'block';
+      label.style.display = 'none';
+      box.classList.add('has-img');
+    } else {
+      img.style.display = 'none'; img.src = '';
+      label.style.display = 'flex';
+      box.classList.remove('has-img');
+    }
+  }
+
+  function readFileAsDataURL(file){
+    return new Promise((resolve,reject)=>{
+      const r = new FileReader();
+      r.onload = ()=> resolve(r.result);
+      r.onerror = ()=> reject(r.error);
+      r.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('photoBox').addEventListener('click', e=>{
+    if(e.target.id === 'photoRemove') return;
+    document.getElementById('photoInput').click();
+  });
+  document.getElementById('photoInput').addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    if(file.size > 3*1024*1024){ alert('Photo size must not exceed 3MB.'); e.target.value=''; return; }
+    state.photo = { data: await readFileAsDataURL(file), filename: file.name };
+    renderPhoto(); markDirtyAndSave();
+  });
+  document.getElementById('photoRemove').addEventListener('click', e=>{
+    e.stopPropagation();
+    state.photo = null;
+    document.getElementById('photoInput').value = '';
+    renderPhoto(); markDirtyAndSave();
+  });
+
+  /* ---------- Organization structure file upload (per experience) ---------- */
+  form.addEventListener('change', async e=>{
+    const el = e.target;
+    if(el.hasAttribute('data-org-input')){
+      const i = parseInt(el.getAttribute('data-org-input'),10);
+      const file = el.files[0]; if(!file) return;
+      if(file.size > 4*1024*1024){ alert('File size must not exceed 4MB.'); el.value=''; return; }
+      const dataUrl = await readFileAsDataURL(file);
+      const isImg = file.type.startsWith('image/');
+      state.experience[i].orgstruct = { data:dataUrl, filename:file.name, thumb: isImg ? dataUrl : '' };
+      renderExp(); markDirtyAndSave();
+    }
+  });
+
+  /* ---------- Signature pad ---------- */
+  const sigCanvas = document.getElementById('sigpad');
+  const sigCtx = sigCanvas.getContext('2d');
+  const sigPlaceholder = document.getElementById('sigPlaceholder');
+  let sigDrawing = false, sigHasContent = false, sigLast = null;
+
+  function initSigCanvas(){
+    const rect = sigCanvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    sigCanvas.width = rect.width * dpr;
+    sigCanvas.height = rect.height * dpr;
+    sigCtx.scale(dpr,dpr);
+    sigCtx.lineWidth = 2.2; sigCtx.lineCap = 'round'; sigCtx.strokeStyle = '#22282a';
+  }
+  function sigPos(e){
+    const rect = sigCanvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: cx - rect.left, y: cy - rect.top };
+  }
+  function sigStart(e){
+    e.preventDefault(); sigDrawing = true; sigLast = sigPos(e);
+    sigPlaceholder.style.display = 'none';
+  }
+  function sigMove(e){
+    if(!sigDrawing) return;
+    e.preventDefault();
+    const p = sigPos(e);
+    sigCtx.beginPath(); sigCtx.moveTo(sigLast.x, sigLast.y); sigCtx.lineTo(p.x,p.y); sigCtx.stroke();
+    sigLast = p; sigHasContent = true;
+  }
+  function sigEnd(){
+    if(!sigDrawing) return;
+    sigDrawing = false;
+    if(sigHasContent){ state.signature = sigCanvas.toDataURL('image/png'); markDirtyAndSave(); }
+  }
+  sigCanvas.addEventListener('mousedown', sigStart);
+  sigCanvas.addEventListener('mousemove', sigMove);
+  window.addEventListener('mouseup', sigEnd);
+  sigCanvas.addEventListener('touchstart', sigStart, {passive:false});
+  sigCanvas.addEventListener('touchmove', sigMove, {passive:false});
+  sigCanvas.addEventListener('touchend', sigEnd);
+  document.getElementById('sigClear').addEventListener('click', ()=>{
+    sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+    sigHasContent = false; state.signature = null;
+    sigPlaceholder.style.display = 'flex';
+    markDirtyAndSave();
+  });
+  function hydrateSignature(){
+    if(!state.signature) return;
+    const img = new Image();
+    img.onload = ()=>{
+      const rect = sigCanvas.getBoundingClientRect();
+      sigCtx.drawImage(img,0,0,rect.width,rect.height);
+      sigHasContent = true; sigPlaceholder.style.display = 'none';
+    };
+    img.src = state.signature;
+  }
+
+  function hydrateSimpleFields(){
+    form.querySelectorAll('[data-k]').forEach(el=>{
+      const k = el.getAttribute('data-k');
+      if(state.fields[k] !== undefined) el.value = state.fields[k];
+    });
+  }
+  function hydrateRadios(){
+    ['marital','empstatus','bgcheck'].forEach(name=>{
+      const val = state[name];
+      if(!val) return;
+      const el = form.querySelector(`input[name="${name}"][value="${val}"]`);
+      if(el) el.checked = true;
+    });
+  }
+
+  /* ---------- Tabs ---------- */
+  const sectionsMeta = [
+    ['00','Position'],['01','Personal'],['02','Education'],['03','Family'],
+    ['04','Experience'],['05','Skills'],['06','References'],['07','Declaration']
+  ];
+  const tabbar = document.getElementById('tabbar');
+  tabbar.innerHTML = sectionsMeta.map((m,i)=>`<div class="tab" data-goto="${i}"><b>${m[0]}</b>${m[1]}</div>`).join('');
+  tabbar.addEventListener('click', e=>{
+    const t = e.target.closest('.tab'); if(!t) return;
+    const idx = t.getAttribute('data-goto');
+    document.querySelector(`.card[data-section="${idx}"]`).scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  function updateActiveTab(){
+    const cards = [...document.querySelectorAll('.card')];
+    let activeIdx = 0;
+    const y = window.scrollY + 120;
+    cards.forEach((c,i)=>{ if(c.offsetTop <= y) activeIdx = i; });
+    [...tabbar.children].forEach((t,i)=> t.classList.toggle('active', i===activeIdx));
+  }
+  window.addEventListener('scroll', updateActiveTab, {passive:true});
+
+  /* ---------- Input handling ---------- */
+  let saveTimer = null;
+  function markDirtyAndSave(){
+    setStatus('Saving…', false);
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persist, 500);
+  }
+
+  form.addEventListener('input', e=>{
+    const el = e.target;
+    if(el.hasAttribute('data-k')){
+      state.fields[el.getAttribute('data-k')] = el.value;
+    } else if(el.hasAttribute('data-arr')){
+      const arr = el.getAttribute('data-arr');
+      const i = parseInt(el.getAttribute('data-i'),10);
+      const f = el.getAttribute('data-f');
+      state[arr][i][f] = el.value;
+    } else if(el.type === 'radio'){
+      state[el.name] = el.value;
+    }
+    markDirtyAndSave();
+  });
+
+  form.addEventListener('click', e=>{
+    const rm = e.target.closest('[data-rm]');
+    if(rm){
+      const arr = rm.getAttribute('data-rm');
+      const i = parseInt(rm.getAttribute('data-i'),10);
+      state[arr].splice(i,1);
+      renderAll(); markDirtyAndSave();
+      return;
+    }
+    const orgRm = e.target.closest('[data-org-rm]');
+    if(orgRm){
+      const i = parseInt(orgRm.getAttribute('data-org-rm'),10);
+      state.experience[i].orgstruct = null;
+      renderExp(); markDirtyAndSave();
+    }
+  });
+
+  document.getElementById('addFam').addEventListener('click', ()=>{
+    state.family.push({rel:'', name:'', gender:'', age:'', job:''});
+    renderFam(); markDirtyAndSave();
+  });
+  document.getElementById('addExp').addEventListener('click', ()=>{
+    state.experience.push(blankExp());
+    renderExp(); markDirtyAndSave();
+  });
+
+  document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
+
+  document.getElementById('btnReset').addEventListener('click', async ()=>{
+    if(!confirm('Clear all data entered in this form?')) return;
+    try{ await window.storage.delete(STORE_KEY, false); }catch(e){}
+    location.reload();
+  });
+
+  /* ---------- PDF generation (Excel print style) ---------- */
+  function escPdf(v){ return esc(v).replace(/\n/g,'<br>'); }
+
+  function pdfRow(label, value, half){
+    return `<div class="pdf-row${half?' half':''}"><span class="lbl">${escPdf(label)}</span><span class="colon">:</span><span class="val">${escPdf(value)}</span></div>`;
+  }
+  function pdfRowPair(l1,v1,l2,v2){
+    return `<div class="pdf-row-pair">${pdfRow(l1,v1,true)}${pdfRow(l2,v2,true)}</div>`;
+  }
+
+  function buildPdfCloneHTML(){
+    const f = state.fields;
+    const logoSrc = document.querySelector('.header-box img.logo').src;
+    const maritalVal = state.marital || '';
+    const empVal = state.empstatus || '';
+    const bgcheckVal = state.bgcheck || '';
+
+    let html = `
+      <div class="pdf-title-row">
+        <h1>Candidate Personal Data Form</h1>
+        <img src="${logoSrc}">
+      </div>
+      <div class="pdf-topgrid">
+        <div style="flex:1;">
+          ${pdfRow('Position Applied', f.position_applied)}
+        </div>
+        <div class="pdf-photo-box">
+          ${state.photo && state.photo.data ? `<img src="${state.photo.data}">` : '(Photo)'}
+        </div>
+      </div>
+
+      <div class="pdf-section-bar">Personal Informations</div>
+      ${pdfRow('Full Name', f.full_name)}
+      ${pdfRowPair('Date of Birth', f.dob, 'Age', f.age)}
+      ${pdfRow('Current Address', f.curr_address)}
+      ${pdfRow('City &amp; Province', f.curr_city)}
+      ${pdfRow('Home Address', f.home_address)}
+      ${pdfRow('City &amp; Province', f.home_city)}
+      ${pdfRowPair('Email', f.email, 'Phone Number', f.phone)}
+      ${pdfRowPair('Marital Status', maritalVal, 'Religion', f.religion)}
+      ${pdfRowPair('Employment Status', empVal, 'Nationality', f.nationality)}
+      ${pdfRowPair('Expected Salary (THP)', f.expected_salary, 'Join Date Availability', f.join_date)}
+
+      <div class="pdf-section-bar">Education Background</div>
+      <table>
+        <thead><tr><th>Level of Education</th><th>Institution Name</th><th>Major</th><th>Entrance Year</th><th>Graduate Year</th></tr></thead>
+        <tbody>
+          ${state.education.map(r=>`<tr><td>${esc(r.level)}</td><td>${esc(r.inst)}</td><td>${esc(r.major)}</td><td>${esc(r.entrance)}</td><td>${esc(r.grad)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div class="pdf-section-bar">Family Background</div>
+      <table>
+        <thead><tr><th>Relationship</th><th>Name</th><th>Gender</th><th>Age</th><th>Job</th></tr></thead>
+        <tbody>
+          ${state.family.map(r=>`<tr><td>${esc(r.rel)}</td><td>${esc(r.name)}</td><td>${esc(r.gender)}</td><td>${esc(r.age)}</td><td>${esc(r.job)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div class="pdf-section-bar">Working Experience</div>
+      ${state.experience.map((r,i)=>`
+        <div class="pdf-exp-title">Experience ${i+1}${i===0?' (Latest)':''}</div>
+        ${pdfRowPair('Company Name', r.company, 'Working Period', r.period)}
+        ${pdfRowPair('Position', r.position, 'Type of Business', r.business)}
+        <div style="font-size:10.5px;font-weight:700;margin:6px 0 2px;">Job Description:</div>
+        <div class="pdf-jobdesc">${escPdf(r.jobdesc)}</div>
+        ${pdfRowPair('Basic Salary (Gross/Nett)', r.salary, 'Transportation Allowance', r.transport)}
+        ${pdfRowPair('Meal Allowance', r.meal, 'Overtime Allowance', r.overtime)}
+        ${pdfRowPair('Organization Structure', r.orgstruct && r.orgstruct.filename ? ('Attached: '+r.orgstruct.filename) : '', 'Other Allowances/Benefits', r.otherallow)}
+        ${r.orgstruct && r.orgstruct.thumb ? `<img src="${r.orgstruct.thumb}" style="max-height:90px;border:1px solid #000;margin:4px 0 8px;">` : ''}
+        ${pdfRow('Reason for Leaving', r.reason)}
+      `).join('')}
+
+      <div class="pdf-section-bar">Skills</div>
+      <table>
+        <thead><tr><th>Language</th><th>Writing</th><th>Reading</th><th>Speaking</th><th>Certification</th></tr></thead>
+        <tbody>
+          ${state.languages.map(r=>`<tr><td>${esc(r.lang)}</td><td>${esc(r.writing)}</td><td>${esc(r.reading)}</td><td>${esc(r.speaking)}</td><td>${esc(r.cert)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <table>
+        <thead><tr><th>Computer / Software Skill</th><th>Scale (1-10)</th><th>Certification</th></tr></thead>
+        <tbody>
+          ${state.software.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.scale)}</td><td>${esc(r.cert)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div class="pdf-section-bar">References</div>
+      <table>
+        <thead><tr><th></th>${state.references.map(r=>`<th>${esc(r.label)}</th>`).join('')}</tr></thead>
+        <tbody>
+          <tr><td><b>Name</b></td>${state.references.map(r=>`<td>${esc(r.name)}</td>`).join('')}</tr>
+          <tr><td><b>Position</b></td>${state.references.map(r=>`<td>${esc(r.position)}</td>`).join('')}</tr>
+          <tr><td><b>Company</b></td>${state.references.map(r=>`<td>${esc(r.company)}</td>`).join('')}</tr>
+          <tr><td><b>Relationship</b></td>${state.references.map(r=>`<td>${esc(r.relationship)}</td>`).join('')}</tr>
+          <tr><td><b>Phone Number</b></td>${state.references.map(r=>`<td>${esc(r.phone)}</td>`).join('')}</tr>
+        </tbody>
+      </table>
+      ${pdfRow('Willing to undergo reference/background check', bgcheckVal)}
+
+      <div class="pdf-section-bar">Declaration</div>
+      <div class="pdf-decl">I hereby certify that the foregoing answers are correct to the best of my knowledge and belief. I understand that misrepresentation will be considered as a just cause for rejection of this application or dismissal from employment.</div>
+      <div class="pdf-sign-row">
+        <div class="pdf-sign-box" style="text-align:left;">
+          ${pdfRow('Place &amp; Date', f.decl_place_date)}
+        </div>
+        <div class="pdf-sign-box">
+          ${state.signature ? `<img src="${state.signature}">` : ''}
+          <div class="line">${escPdf(f.decl_name || 'Name')}</div>
+        </div>
+      </div>
+    `;
+    return html;
+  }
+
+  async function generatePDF(){
+    const clone = document.getElementById('pdfClone');
+    clone.innerHTML = buildPdfCloneHTML();
+    clone.classList.add('show');
+    await new Promise(r=>setTimeout(r,60)); // let images paint
+    const canvas = await html2canvas(clone, {scale:2, backgroundColor:'#ffffff', useCORS:true, windowWidth:clone.scrollWidth});
+    clone.classList.remove('show');
+    const imgData = canvas.toDataURL('image/jpeg',0.93);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','pt','a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+    let heightLeft = imgHeight, position = 0;
+    pdf.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight);
+    heightLeft -= pageHeight;
+    while(heightLeft > 0){
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight);
+      heightLeft -= pageHeight;
+    }
+    return pdf;
+  }
+
+  function pdfFilename(){
+    const n = (state.fields.full_name || 'Candidate_Form').trim().replace(/[^\w\- ]/g,'').replace(/\s+/g,'_');
+    return n + '_JFEEI_Application.pdf';
+  }
+
+  document.getElementById('btnDownloadPdf').addEventListener('click', async ()=>{
+    const btn = document.getElementById('btnDownloadPdf');
+    const orig = btn.textContent; btn.textContent = 'Generating…'; btn.disabled = true;
+    try{
+      const pdf = await generatePDF();
+      pdf.save(pdfFilename());
+    }catch(err){
+      alert('Failed to generate PDF: ' + err.message);
+      console.error(err);
+    }
+    btn.textContent = orig; btn.disabled = false;
+  });
+
+  document.getElementById('btnEmailSubmit').addEventListener('click', async ()=>{
+    const hrEmail = document.getElementById('hrEmailInput').value.trim();
+    if(!hrEmail){ alert('Please enter the HR email address first.'); document.getElementById('hrEmailInput').focus(); return; }
+    const btn = document.getElementById('btnEmailSubmit');
+    const orig = btn.textContent; btn.textContent = 'Generating…'; btn.disabled = true;
+    try{
+      const pdf = await generatePDF();
+      const filename = pdfFilename();
+      pdf.save(filename);
+      const name = state.fields.full_name || '';
+      const subject = encodeURIComponent('Candidate Application - ' + name);
+      const body = encodeURIComponent(
+        'Dear HR,\n\nPlease find my completed Candidate Personal Data Form attached.\n\n' +
+        'Note: your browser just downloaded the file "' + filename + '" — please attach it to this email before sending, as browsers cannot attach files to emails automatically.\n\n' +
+        'Regards,\n' + name
+      );
+      window.location.href = 'mailto:' + encodeURIComponent(hrEmail) + '?subject=' + subject + '&body=' + body;
+    }catch(err){
+      alert('Failed to generate PDF: ' + err.message);
+      console.error(err);
+    }
+    btn.textContent = orig; btn.disabled = false;
+  });
+
+  document.getElementById('hrEmailInput').addEventListener('input', e=>{
+    state.fields.hr_email = e.target.value;
+    markDirtyAndSave();
+  });
+
+  function setSubmitStatus(text, cls){
+    const el = document.getElementById('submitStatus');
+    el.textContent = text;
+    el.className = 'submit-status' + (cls ? ' '+cls : '');
+  }
+
+  document.getElementById('btnSheetSubmit').addEventListener('click', async ()=>{
+    if(!GOOGLE_SCRIPT_URL){
+      alert('Google Sheet submission has not been configured by the admin yet. Please use "Submit via Email" instead.');
+      return;
+    }
+    const btn = document.getElementById('btnSheetSubmit');
+    const orig = btn.textContent;
+    btn.textContent = 'Submitting…'; btn.disabled = true;
+    setSubmitStatus('Generating PDF…', '');
+    try{
+      const pdf = await generatePDF();
+      const filename = pdfFilename();
+      const dataUri = pdf.output('datauristring'); // data:application/pdf;base64,XXXX
+      const base64 = dataUri.split(',')[1];
+
+      const payload = {
+        filename: filename,
+        pdfBase64: base64,
+        full_name: state.fields.full_name || '',
+        position_applied: state.fields.position_applied || '',
+        email: state.fields.email || '',
+        phone: state.fields.phone || '',
+        dob: state.fields.dob || '',
+        curr_address: state.fields.curr_address || '',
+        marital: state.marital || '',
+        empstatus: state.empstatus || '',
+        expected_salary: state.fields.expected_salary || '',
+        join_date: state.fields.join_date || ''
+      };
+
+      setSubmitStatus('Sending to HR…', '');
+      const res = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      if(result.status === 'success'){
+        setSubmitStatus('✓ Submitted — HR has received your application.', 'ok');
+      } else {
+        throw new Error(result.message || 'Unknown error from server.');
+      }
+    }catch(err){
+      console.error(err);
+      setSubmitStatus('✕ Submission failed. Try "Submit via Email" instead.', 'err');
+    }
+    btn.textContent = orig; btn.disabled = false;
+  });
+
+  /* ---------- Persistence ---------- */
+  function setStatus(text, ok){
+    const note = document.getElementById('saveNote');
+    if(note) note.textContent = text;
+  }
+
+  async function persist(){
+    try{
+      const res = await window.storage.set(STORE_KEY, JSON.stringify(state), false);
+      if(res){ setStatus('Saved', true); }
+      else{ setStatus('Gagal menyimpan', false); }
+    }catch(err){
+      setStatus('Gagal menyimpan', false);
+      console.error('Storage error:', err);
+    }
+  }
+
+  async function load(){
+    try{
+      const res = await window.storage.get(STORE_KEY, false);
+      if(res && res.value){
+        const saved = JSON.parse(res.value);
+        Object.assign(state, saved);
+      }
+      setStatus('Ready', true);
+    }catch(err){
+      setStatus('New form', true);
+    }
+    renderAll();
+    updateActiveTab();
+    initSigCanvas();
+    hydrateSignature();
+    document.getElementById('hrEmailInput').value = state.fields.hr_email || '';
+  }
+
+  load();
+  window.addEventListener('resize', ()=>{ /* keep existing drawing on resize without rescaling to avoid distortion */ }, {passive:true});
+})();
+</script>
 </body>
 </html>
