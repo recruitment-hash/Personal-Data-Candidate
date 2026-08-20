@@ -8,132 +8,83 @@
 </head>
 <body class="bg-gray-100 py-10 px-4">
     <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-1">CANDIDATE PERSONAL DATA FORM</h2>
-        <p class="text-center text-gray-500 mb-8 text-sm">Harap isi formulir di bawah ini dengan lengkap dan benar.</p>
-
-        <form id="candidateForm" class="space-y-8">
-            
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">CANDIDATE PERSONAL DATA FORM</h2>
+        
+        <form id="candidateForm" class="space-y-6">
             <!-- Posisi -->
-            <div class="bg-blue-50 p-4 rounded-md">
-                <label class="block font-semibold text-gray-700 mb-1">Position Applied :</label>
-                <input type="text" name="position_applied" required class="w-full border border-gray-300 rounded px-3 py-2 bg-white">
+            <div class="bg-blue-50 p-4 rounded-md border border-blue-100">
+                <label class="block font-semibold text-gray-700">Position Applied:</label>
+                <input type="text" name="position_applied" required class="w-full mt-1 border rounded p-2">
             </div>
 
-            <!-- I. PERSONAL INFORMATIONS -->
-            <div class="space-y-4">
-                <h3 class="text-lg font-bold text-gray-700 border-b pb-2">I. PERSONAL INFORMATIONS</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
-                        <input type="text" name="full_name" required class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Age</label>
-                        <input type="number" name="age" class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Date of Birth</label>
-                        <input type="date" name="dob" class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Religion</label>
-                        <input type="text" name="religion" class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Nationality</label>
-                        <input type="text" name="nationality" class="w-full border border-gray-300 rounded px-3 py-2" value="WNI">
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Current Address</label>
-                        <textarea name="current_address" rows="2" class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Current City & Province</label>
-                        <input type="text" name="current_city" class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Home Address (KTP)</label>
-                        <textarea name="home_address" rows="2" class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Home City & Province</label>
-                        <input type="text" name="home_city" class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
-                        <input type="email" name="email" required class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Phone Number</label>
-                        <input type="text" name="phone" required class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Marital Status</label>
-                        <select name="marital_status" class="w-full border border-gray-300 rounded px-3 py-2">
-                            <option value="Single">Single</option>
-                            <option value="Married">Married</option>
-                            <option value="Widow">Widow</option>
-                            <option value="Widower">Widower</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Employment Status</label>
-                        <select name="employment_status" class="w-full border border-gray-300 rounded px-3 py-2">
-                            <option value="Permanent">Permanent</option>
-                            <option value="Contract">Contract</option>
-                            <option value="Freelance">Freelance</option>
-                            <option value="Standby">Standby</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Expected Salary (THP)</label>
-                        <input type="text" name="expected_salary" class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Join Date Availability</label>
-                        <input type="text" name="join_availability" class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
+            <!-- I. PERSONAL -->
+            <div class="border-b pb-4">
+                <h3 class="font-bold text-lg mb-3">I. PERSONAL INFORMATIONS</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" name="full_name" placeholder="Full Name" required class="border rounded p-2">
+                    <input type="text" name="dob" placeholder="Date of Birth" class="border rounded p-2">
+                    <textarea name="current_address" placeholder="Current Address" class="border rounded p-2 col-span-2"></textarea>
+                    <input type="email" name="email" placeholder="Email" required class="border rounded p-2">
+                    <input type="text" name="phone" placeholder="Phone Number" required class="border rounded p-2">
                 </div>
             </div>
 
-            <!-- II, III, IV, V, VI (Sections omitted for brevity in display, pastikan Anda menggunakan kode lengkap yang sebelumnya saya berikan) -->
-            <!-- ... (Sisa bagian form education, family, experience, dll seperti di atas) ... -->
-
-            <div class="pt-4 text-center">
-                <button type="submit" id="submitBtn" class="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg shadow hover:bg-blue-700">
-                    Kirim Formulir Kandidat
-                </button>
+            <!-- II. EDUCATION -->
+            <div class="border-b pb-4">
+                <h3 class="font-bold text-lg mb-3">II. EDUCATION BACKGROUND</h3>
+                <div class="space-y-2">
+                    <input type="text" name="edu_sma" placeholder="SMA/SMK (Institution, Major, Year)" class="w-full border rounded p-2">
+                    <input type="text" name="edu_dip" placeholder="Diploma (Institution, Major, Year)" class="w-full border rounded p-2">
+                    <input type="text" name="edu_bach" placeholder="Bachelor (Institution, Major, Year)" class="w-full border rounded p-2">
+                </div>
             </div>
+
+            <!-- III. FAMILY -->
+            <div class="border-b pb-4">
+                <h3 class="font-bold text-lg mb-3">III. FAMILY BACKGROUND</h3>
+                <input type="text" name="fam_wife" placeholder="Wife/Husband Name & Job" class="w-full border rounded p-2 mb-2">
+                <input type="text" name="fam_child" placeholder="Children (Name, Age, Job)" class="w-full border rounded p-2">
+            </div>
+
+            <!-- IV. WORKING EXPERIENCE -->
+            <div class="border-b pb-4">
+                <h3 class="font-bold text-lg mb-3">IV. WORKING EXPERIENCE (Start from Last)</h3>
+                <div class="space-y-3">
+                    <textarea name="exp1" placeholder="Experience 1 (Company, Pos, Period, Salary, Reason for Leaving)" class="w-full border rounded p-2 h-20"></textarea>
+                    <textarea name="exp2" placeholder="Experience 2 (Company, Pos, Period, Salary, Reason for Leaving)" class="w-full border rounded p-2 h-20"></textarea>
+                    <textarea name="exp3" placeholder="Experience 3 (Company, Pos, Period, Salary, Reason for Leaving)" class="w-full border rounded p-2 h-20"></textarea>
+                </div>
+            </div>
+
+            <!-- V. SKILLS -->
+            <div class="border-b pb-4">
+                <h3 class="font-bold text-lg mb-3">V. SKILLS</h3>
+                <input type="text" name="lang_skills" placeholder="Language (Scale 1-10)" class="w-full border rounded p-2 mb-2">
+                <input type="text" name="comp_skills" placeholder="Computer Skills (Scale 1-10)" class="w-full border rounded p-2">
+            </div>
+
+            <!-- VI. REFERENCES -->
+            <div class="pb-4">
+                <h3 class="font-bold text-lg mb-3">VI. REFERENCES</h3>
+                <input type="text" name="ref1" placeholder="Reference 1 (HR Name, Position, Company, Phone)" class="w-full border rounded p-2 mb-2">
+                <input type="text" name="ref2" placeholder="Reference 2 (Name, Position, Company, Phone)" class="w-full border rounded p-2">
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700">KIRIM FORMULIR</button>
         </form>
 
-        <div id="successMessage" class="hidden mt-6 p-4 bg-green-100 text-green-700 rounded-lg text-center font-medium">
-            Data berhasil dikirim!
-        </div>
+        <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 text-green-700 rounded text-center">Data Berhasil Dikirim!</div>
     </div>
 
     <script>
-        // URL ANDA SUDAH DIMASUKKAN DI SINI
         const scriptURL = 'https://script.google.com/macros/s/AKfycbx-uaREHEIZxycnuctP_8LmQgzEx2mm47xarKc_cm3U_uLKo1i7YLwdgk3ME7FLXPfr4w/exec';
-        
         const form = document.getElementById('candidateForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const successMessage = document.getElementById('successMessage');
-
         form.addEventListener('submit', e => {
             e.preventDefault();
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Mengirim...";
-            
             fetch(scriptURL, { method: 'POST', body: new FormData(form)})
-                .then(response => {
+                .then(() => {
                     form.reset();
-                    submitBtn.style.display = 'none';
-                    successMessage.classList.remove('hidden');
-                })
-                .catch(error => {
-                    alert('Gagal mengirim, silakan coba lagi.');
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = "Kirim Formulir Kandidat";
+                    document.getElementById('successMessage').classList.remove('hidden');
                 });
         });
     </script>
