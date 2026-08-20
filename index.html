@@ -307,7 +307,7 @@ table.dyn tr + tr td{border-top:1px dashed var(--line);}
   font-family:Calibri,Arial,sans-serif;
   padding:34px 38px;
 }
-.pdfclone.show{ left:0; z-index:-1; opacity:0; pointer-events:none; }
+.pdfclone.show{ left:0; top:0; z-index:9999; opacity:1; pointer-events:none; }
 .pdfclone .pdf-title-row{
   border:2px solid #000;display:flex;align-items:center;justify-content:space-between;
   padding:10px 16px;margin-bottom:12px;
@@ -535,7 +535,7 @@ table.dyn tr + tr td{border-top:1px dashed var(--line);}
   // After deploying the Google Apps Script (see setup instructions),
   // paste the Web App URL below between the quotes. Leave empty ('')
   // to disable the "Submit Application" (Google Sheet) button.
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-uaREHEIZxycnuctP_8LmQgzEx2mm47xarKc_cm3U_uLKo1i7YLwdgk3ME7FLXPfr4w/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-uaREHEIZxycnuctP_8LmQgzEx2mm47xarKc_cm3U_uLKo1i7YLwdgk3ME7FLXPfr4w/exec';;
   // ─────────────────────────────────────────────────────────────
 
   const state = {
@@ -880,7 +880,7 @@ table.dyn tr + tr td{border-top:1px dashed var(--line);}
 
   document.getElementById('btnReset').addEventListener('click', async ()=>{
     if(!confirm('Clear all data entered in this form?')) return;
-    try{ await window.storage.delete(STORE_KEY, false); }catch(e){}
+    try{ localStorage.removeItem(STORE_KEY); }catch(e){}
     location.reload();
   });
 
@@ -1002,27 +1002,77 @@ table.dyn tr + tr td{border-top:1px dashed var(--line);}
   async function generatePDF(){
     const clone = document.getElementById('pdfClone');
     clone.innerHTML = buildPdfCloneHTML();
+
+    // html2canvas cannot reliably capture an element that is opacity:0 or behind
+    // the page. Render the clone visibly for the capture, then move it away again.
     clone.classList.add('show');
-    await new Promise(r=>setTimeout(r,60)); // let images paint
-    const canvas = await html2canvas(clone, {scale:2, backgroundColor:'#ffffff', useCORS:true, windowWidth:clone.scrollWidth});
+    clone.style.left = '0px';
+    clone.style.top = '0px';
+    clone.style.zIndex = '9999';
+    clone.style.opacity = '1';
+
+    // Wait for layout and all data-URL images (photo/logo/signature) to finish painting.
+    await waitForPdfImages(clone);
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    const canvas = await html2canvas(clone, {
+      scale: Math.min(2, window.devicePixelRatio || 1.5),
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      width: clone.scrollWidth,
+      height: clone.scrollHeight,
+      windowWidth: Math.max(document.documentElement.clientWidth, clone.scrollWidth),
+      windowHeight: Math.max(document.documentElement.clientHeight, clone.scrollHeight),
+      scrollX: 0,
+      scrollY: 0
+    });
+
     clone.classList.remove('show');
-    const imgData = canvas.toDataURL('image/jpeg',0.93);
+    clone.style.left = '-10000px';
+    clone.style.zIndex = '-1';
+    clone.style.opacity = '1';
+
+    if(!canvas.width || !canvas.height){
+      throw new Error('PDF canvas is empty.');
+    }
+
+    const imgData = canvas.toDataURL('image/jpeg',0.92);
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p','pt','a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pageWidth;
+    const margin = 18;
+    const imgWidth = pageWidth - margin * 2;
     const imgHeight = canvas.height * imgWidth / canvas.width;
-    let heightLeft = imgHeight, position = 0;
-    pdf.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight);
-    heightLeft -= pageHeight;
+    const printableHeight = pageHeight - margin * 2;
+
+    let heightLeft = imgHeight;
+    let position = margin;
+
+    pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight,'FORM','FAST');
+    heightLeft -= printableHeight;
+
     while(heightLeft > 0){
-      position = heightLeft - imgHeight;
+      position = margin - (imgHeight - heightLeft);
       pdf.addPage();
-      pdf.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight);
-      heightLeft -= pageHeight;
+      pdf.addImage(imgData,'JPEG',margin,position,imgWidth,imgHeight,'FORM','FAST');
+      heightLeft -= printableHeight;
     }
+
     return pdf;
+  }
+
+  async function waitForPdfImages(root){
+    const images = Array.from(root.querySelectorAll('img'));
+    await Promise.all(images.map(img=>new Promise(resolve=>{
+      if(img.complete && img.naturalWidth > 0) return resolve();
+      const done=()=>{ img.removeEventListener('load',done); img.removeEventListener('error',done); resolve(); };
+      img.addEventListener('load',done,{once:true});
+      img.addEventListener('error',done,{once:true});
+      setTimeout(done,5000);
+    })));
   }
 
   function pdfFilename(){
@@ -1080,50 +1130,81 @@ table.dyn tr + tr td{border-top:1px dashed var(--line);}
 
   document.getElementById('btnSheetSubmit').addEventListener('click', async ()=>{
     if(!GOOGLE_SCRIPT_URL){
-      alert('Google Sheet submission has not been configured by the admin yet. Please use "Submit via Email" instead.');
+      alert('Google Sheet submission has not been configured by the admin yet.');
       return;
     }
+
+    // Save the latest input before submitting.
+    clearTimeout(saveTimer);
+    persist();
+
     const btn = document.getElementById('btnSheetSubmit');
     const orig = btn.textContent;
-    btn.textContent = 'Submitting…'; btn.disabled = true;
+    btn.textContent = 'Submitting…';
+    btn.disabled = true;
     setSubmitStatus('Generating PDF…', '');
+
     try{
       const pdf = await generatePDF();
       const filename = pdfFilename();
-      const dataUri = pdf.output('datauristring'); // data:application/pdf;base64,XXXX
+      const dataUri = pdf.output('datauristring');
       const base64 = dataUri.split(',')[1];
 
       const payload = {
         filename: filename,
         pdfBase64: base64,
+        submittedAt: new Date().toISOString(),
         full_name: state.fields.full_name || '',
         position_applied: state.fields.position_applied || '',
         email: state.fields.email || '',
         phone: state.fields.phone || '',
         dob: state.fields.dob || '',
         curr_address: state.fields.curr_address || '',
+        curr_city: state.fields.curr_city || '',
+        home_address: state.fields.home_address || '',
+        home_city: state.fields.home_city || '',
         marital: state.marital || '',
+        religion: state.fields.religion || '',
         empstatus: state.empstatus || '',
+        nationality: state.fields.nationality || '',
         expected_salary: state.fields.expected_salary || '',
-        join_date: state.fields.join_date || ''
+        join_date: state.fields.join_date || '',
+        bgcheck: state.bgcheck || '',
+        decl_place_date: state.fields.decl_place_date || '',
+        decl_name: state.fields.decl_name || '',
+        hr_email: state.fields.hr_email || '',
+        formJson: JSON.stringify(state)
       };
 
       setSubmitStatus('Sending to HR…', '');
+
+      // URL-encoded payload avoids the CORS preflight caused by application/json.
+      const body = new URLSearchParams();
+      body.set('payload', JSON.stringify(payload));
+
       const res = await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: body,
+        redirect: 'follow'
       });
-      const result = await res.json();
+
+      const text = await res.text();
+      let result;
+      try { result = JSON.parse(text); }
+      catch(e){ throw new Error('Server returned an invalid response: ' + text.slice(0,180)); }
+
       if(result.status === 'success'){
-        setSubmitStatus('✓ Submitted — HR has received your application.', 'ok');
-      } else {
+        setSubmitStatus('✓ Submitted — saved to Google Sheet & Drive.', 'ok');
+      }else{
         throw new Error(result.message || 'Unknown error from server.');
       }
     }catch(err){
       console.error(err);
-      setSubmitStatus('✕ Submission failed. Try "Submit via Email" instead.', 'err');
+      setSubmitStatus('✕ Submission failed: ' + (err.message || 'Unknown error'), 'err');
+    }finally{
+      btn.textContent = orig;
+      btn.disabled = false;
     }
-    btn.textContent = orig; btn.disabled = false;
   });
 
   /* ---------- Persistence ---------- */
@@ -1132,28 +1213,33 @@ table.dyn tr + tr td{border-top:1px dashed var(--line);}
     if(note) note.textContent = text;
   }
 
-  async function persist(){
+  function persist(){
     try{
-      const res = await window.storage.set(STORE_KEY, JSON.stringify(state), false);
-      if(res){ setStatus('Saved', true); }
-      else{ setStatus('Gagal menyimpan', false); }
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      setStatus('Saved', true);
+      return true;
     }catch(err){
       setStatus('Gagal menyimpan', false);
       console.error('Storage error:', err);
+      return false;
     }
   }
 
-  async function load(){
+  function load(){
     try{
-      const res = await window.storage.get(STORE_KEY, false);
-      if(res && res.value){
-        const saved = JSON.parse(res.value);
+      const raw = localStorage.getItem(STORE_KEY);
+      if(raw){
+        const saved = JSON.parse(raw);
         Object.assign(state, saved);
+        setStatus('Saved data loaded', true);
+      }else{
+        setStatus('New form', true);
       }
-      setStatus('Ready', true);
     }catch(err){
+      console.error('Load error:', err);
       setStatus('New form', true);
     }
+
     renderAll();
     updateActiveTab();
     initSigCanvas();
